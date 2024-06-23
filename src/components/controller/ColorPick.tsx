@@ -20,7 +20,7 @@ export function ColorPick() {
   // TODO: user can change another color set
   // TODO: user can add another color set
   return (
-    <div>
+    <div className="m-5">
       <div className="w-10 h-10 m-5" style={{ backgroundColor: color }}></div>
       <div className="grid grid-cols-2">
         {Object.entries(COLOR_SET).map(([key, value], index) => (

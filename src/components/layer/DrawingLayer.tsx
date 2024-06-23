@@ -4,21 +4,11 @@ import { PIXEL_SIZE } from "@/const";
 import { useController } from "@/context/controllerContext";
 
 type Grid = string[][];
-interface Behavior {
+interface DrawBehavior {
   x: number;
   y: number;
   beforeColorCode: string;
 }
-
-const getWH = () => {
-  const url = new URL(window.location.href);
-  const width = url.searchParams.get("width");
-  const height = url.searchParams.get("height");
-  return {
-    width: width ? parseInt(width) : 10,
-    height: height ? parseInt(height) : 10,
-  };
-};
 
 const createGrid = (width: number, height: number): Grid => {
   const grid: Grid = [];
@@ -93,8 +83,8 @@ const stackDrawLog = (
   pixelX: number,
   pixelY: number,
   hexColor: string,
-  recentPixel: Behavior[],
-  setLog: React.Dispatch<React.SetStateAction<Behavior[]>>
+  recentPixel: DrawBehavior[],
+  setLog: React.Dispatch<React.SetStateAction<DrawBehavior[]>>
 ) => {
   if (recentPixel.length < 1) {
     setLog([{ x: pixelX, y: pixelY, beforeColorCode: hexColor }]);
@@ -116,10 +106,10 @@ const stackDrawLog = (
 /** handle pixel when undo & redo */
 const handlePixelBehaivior = (
   context: CanvasRenderingContext2D,
-  inputPixelList?: Behavior[],
+  inputPixelList?: DrawBehavior[],
   handleGrid?: (x: number, y: number, color: string) => void
 ) => {
-  const pixelList: Behavior[] = [];
+  const pixelList: DrawBehavior[] = [];
   inputPixelList?.map((element) => {
     if (element) {
       context.fillStyle = element.beforeColorCode;
@@ -146,19 +136,16 @@ const handlePixelBehaivior = (
   return pixelList;
 };
 
-/** checkered background style */
-const checkeredBgStyle = {
-  width: `${getWH().width * PIXEL_SIZE}px`,
-  height: `${getWH().height * PIXEL_SIZE}px`,
-  backgroundImage: `
-    linear-gradient(90deg, rgba(0, 0, 0, 0.3) 1px, transparent 0),
-    linear-gradient(rgba(0, 0, 0, 0.3) 1px, transparent 0)
-  `,
-  backgroundSize: "10px 10px",
-};
-
 /** Layer Component */
-export function DrawingLayer() {
+export function DrawingLayer({
+  width,
+  height,
+  checkeredBgStyle,
+}: {
+  width: number;
+  height: number;
+  checkeredBgStyle: React.CSSProperties;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { color, availableClickRatio } = useController();
   const context = canvasRef.current?.getContext("2d", {
@@ -166,9 +153,7 @@ export function DrawingLayer() {
   });
   const rect = canvasRef.current?.getBoundingClientRect();
 
-  const [grid, setGrid] = useState<Grid>(
-    createGrid(getWH().width, getWH().height)
-  );
+  const [grid, setGrid] = useState<Grid>(createGrid(width, height));
 
   const updateGrid = useCallback(
     (pixelX: number, pixelY: number, color: string) => {
@@ -181,9 +166,9 @@ export function DrawingLayer() {
     [grid]
   );
 
-  const [behaivior, setBehaivior] = useState<Behavior[]>([]);
-  const [beforeLogs, setBeforeLogs] = useState<Behavior[][]>([]);
-  const [redo, setRedo] = useState<Behavior[][]>([]);
+  const [behaivior, setBehaivior] = useState<DrawBehavior[]>([]);
+  const [beforeLogs, setBeforeLogs] = useState<DrawBehavior[][]>([]);
+  const [redo, setRedo] = useState<DrawBehavior[][]>([]);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
 
   const handleCanvasPenOn = () => {
@@ -269,12 +254,7 @@ export function DrawingLayer() {
     const context = canvasRef.current?.getContext("2d", {
       willReadFrequently: true,
     });
-    renderCanvas(
-      context,
-      getWH().width * PIXEL_SIZE,
-      getWH().height * PIXEL_SIZE,
-      grid
-    );
+    renderCanvas(context, width * PIXEL_SIZE, height * PIXEL_SIZE, grid);
   }, []);
 
   useEffect(() => {
@@ -289,18 +269,18 @@ export function DrawingLayer() {
   }, [handleUndo]);
 
   return (
-    <div className="relative flex place-items-center">
+    <div className="relative flex place-items-center m-5">
       <div
         style={checkeredBgStyle}
-        className={`absolute top-0 left-0 w-${PIXEL_SIZE * getWH().width} h-${
-          PIXEL_SIZE * getWH().height
+        className={`absolute top-0 left-0 w-${PIXEL_SIZE * width} h-${
+          PIXEL_SIZE * height
         } z-10`}
       ></div>
       <canvas
         ref={canvasRef}
         className="bg-transparent outline-dotted z-20"
-        width={getWH().width * PIXEL_SIZE}
-        height={getWH().height * PIXEL_SIZE}
+        width={width * PIXEL_SIZE}
+        height={height * PIXEL_SIZE}
         onClick={handleCanvasClick}
         onMouseDown={handleCanvasPenOn}
         onMouseUp={() => {

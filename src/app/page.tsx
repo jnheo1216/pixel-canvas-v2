@@ -1,15 +1,10 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Home() {
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
-  const router = useRouter();
-
-  const handleSubmit = () => {
-    router.push(`/workspace?width=${width}&height=${height}`);
-  };
 
   return (
     <main className="flex flex-col items-center justify-between p-24">
@@ -30,12 +25,13 @@ export default function Home() {
         onChange={(e) => setHeight(parseInt(e.target.value))}
       />
       <br></br>
-      <button
+      <Link
+        type="button"
+        href={`/workspace?width=${width}&height=${height}`}
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        onClick={handleSubmit}
       >
         Submit
-      </button>
+      </Link>
     </main>
   );
 }
